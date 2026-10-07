@@ -1,0 +1,30 @@
+{
+  "name": "polleria-las-delicias",
+  "version": "1.0.0",
+  "description": "Sistema de Pedidos - Arquitectura de Microservicios",
+  "private": true,
+  "scripts": {
+    "start": "concurrently --kill-others \"npm run start:gateway\" \"npm run start:auth\" \"npm run start:products\" \"npm run start:orders\"",
+    "start:gateway": "cd services/api-gateway && node src/index.js",
+    "start:auth": "cd services/auth-service && node src/index.js",
+    "start:products": "cd services/products-service && node src/index.js",
+    "start:orders": "cd services/orders-service && node src/index.js",
+    "start:frontend": "cd frontend && npm run dev",
+    "start:all": "concurrently --kill-others \"npm run start\" \"npm run start:frontend\"",
+    "dev": "concurrently --kill-others \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:products\" \"npm run dev:orders\" \"npm run dev:frontend\"",
+    "dev:gateway": "cd services/api-gateway && npm run dev",
+    "dev:auth": "cd services/auth-service && npm run dev",
+    "dev:products": "cd services/products-service && npm run dev",
+    "dev:orders": "cd services/orders-service && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm run install:gateway && npm run install:auth && npm run install:products && npm run install:orders && npm run install:frontend",
+    "install:gateway": "cd services/api-gateway && npm install",
+    "install:auth": "cd services/auth-service && npm install",
+    "install:products": "cd services/products-service && npm install",
+    "install:orders": "cd services/orders-service && npm install",
+    "install:frontend": "cd frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
