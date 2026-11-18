@@ -44,6 +44,7 @@ export default function NuevoPedido() {
         }
       }
     } catch (error) {
+      console.error('Error al cargar productos:', error)
       toast.error('Error al cargar productos')
     } finally {
       setLoading(false)
@@ -70,7 +71,7 @@ export default function NuevoPedido() {
 
   const agregarAlCarrito = (producto) => {
     setCarrito(prev => {
-      const existe = prev.find(item => item.producto.id === producto.id)
+      const existe = prev.some(item => item.producto.id === producto.id)
       if (existe) {
         return prev.map(item => 
           item.producto.id === producto.id 
@@ -143,6 +144,7 @@ export default function NuevoPedido() {
         toast.error(response.error || 'Error al crear pedido')
       }
     } catch (error) {
+      console.error('Error de conexión:', error)
       toast.error('Error de conexión')
     } finally {
       setSubmitting(false)

@@ -37,6 +37,7 @@ export default function DetallePedido() {
         navigate('/pedidos')
       }
     } catch (error) {
+      console.error('Error al cargar pedido:', error)
       toast.error('Error al cargar pedido')
     } finally {
       setLoading(false)
@@ -51,6 +52,7 @@ export default function DetallePedido() {
         setPedido(response.data)
       }
     } catch (error) {
+      console.error('Error al actualizar estado:', error)
       toast.error('Error')
     }
   }

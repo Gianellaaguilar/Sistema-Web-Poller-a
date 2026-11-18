@@ -183,12 +183,10 @@ async function create(req, res) {
     const pedido = pedidoResult[0];
 
     // Insertar detalles (con nombre del producto denormalizado)
-    for (const item of items) {
-      await sql`
-        INSERT INTO detalle_pedidos (pedido_id, producto_id, producto_nombre, cantidad, precio_unitario, subtotal, notas)
-        VALUES (${pedido.id}, ${item.producto_id}, ${item.producto_nombre}, ${item.cantidad}, ${item.precio_unitario}, ${item.precio_unitario * item.cantidad}, ${item.notas || null})
-      `;
-    }
+    await Promise.all(items.map(item => sql`
+      INSERT INTO detalle_pedidos (pedido_id, producto_id, producto_nombre, cantidad, precio_unitario, subtotal, notas)
+      VALUES (${pedido.id}, ${item.producto_id}, ${item.producto_nombre}, ${item.cantidad}, ${item.precio_unitario}, ${item.precio_unitario * item.cantidad}, ${item.notas || null})
+    `));
 
     // Obtener detalles insertados
     const detalles = await sql`

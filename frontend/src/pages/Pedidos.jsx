@@ -35,6 +35,7 @@ export default function Pedidos() {
       const response = await api.get(`/pedidos?${params.toString()}`)
       if (response.success) setPedidos(response.data)
     } catch (error) {
+      console.error('Error al cargar pedidos:', error)
       toast.error('Error al cargar pedidos')
     } finally {
       setLoading(false)
@@ -51,6 +52,7 @@ export default function Pedidos() {
         toast.error(response.error)
       }
     } catch (error) {
+      console.error('Error de conexión:', error)
       toast.error('Error de conexión')
     }
   }
@@ -61,7 +63,7 @@ export default function Pedidos() {
   const pedidosFiltrados = pedidos.filter(p => {
     if (!busqueda) return true
     return p.numero_pedido.toLowerCase().includes(busqueda.toLowerCase()) ||
-           (p.nombre_cliente && p.nombre_cliente.toLowerCase().includes(busqueda.toLowerCase()))
+           (p.nombre_cliente?.toLowerCase().includes(busqueda.toLowerCase()))
   })
 
   const renderLista = () => {

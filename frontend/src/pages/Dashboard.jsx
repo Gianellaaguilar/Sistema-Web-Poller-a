@@ -28,6 +28,7 @@ export default function Dashboard() {
       if (pendientesRes.success) setPedidosPendientes(pendientesRes.data)
       if (preparandoRes.success) setPedidosPreparando(preparandoRes.data)
     } catch (error) {
+      console.error('Error al cargar datos:', error)
       toast.error('Error al cargar datos')
     } finally {
       setLoading(false)

@@ -18,6 +18,7 @@ export default function Reportes() {
       const response = await api.get(`/estadisticas/resumen?periodo=${periodo}`)
       if (response.success) setStats(response.data)
     } catch (error) {
+      console.error('Error al cargar estadísticas:', error)
       toast.error('Error al cargar estadísticas')
     } finally {
       setLoading(false)

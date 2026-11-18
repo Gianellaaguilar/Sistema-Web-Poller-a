@@ -31,11 +31,16 @@ const detallePagoHtml = ({ monto_recibido, vuelto, metodo_pago }) => {
 }
 
 export const imprimirHtml = (html) => {
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) return
-  printWindow.document.write(html)
-  printWindow.document.close()
-  printWindow.print()
+  const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }))
+  const printWindow = window.open(url, '_blank')
+  if (!printWindow) {
+    URL.revokeObjectURL(url)
+    return
+  }
+  printWindow.onload = () => {
+    printWindow.print()
+    URL.revokeObjectURL(url)
+  }
 }
 
 const seccionPagoHtml = (pago) => `

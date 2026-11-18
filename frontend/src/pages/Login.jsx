@@ -26,6 +26,7 @@ export default function Login() {
         toast.error(response.error || 'Error al iniciar sesión')
       }
     } catch (error) {
+      console.error('Error al iniciar sesión:', error)
       toast.error('Error de conexión')
     } finally {
       setLoading(false)
