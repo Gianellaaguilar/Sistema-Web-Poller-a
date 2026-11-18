@@ -3,108 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { FiUser, FiMapPin, FiPhone, FiCreditCard, FiPlus, FiMinus, FiTrash2, FiShoppingCart, FiCheck, FiPrinter, FiAlertCircle, FiChevronRight } from 'react-icons/fi'
 import { GiChickenOven } from 'react-icons/gi'
 import { api } from '../services/api'
+import { parsearContenidoBoleta, generarHtmlBoleta } from '../utils/boleta'
 import toast from 'react-hot-toast'
 
 const tipoAtencionEmoji = { salon: '🪑', delivery: '🛵', recojo: '📦' }
-
-// ---- Helpers para impresión de boletas ----
-
-const parsearContenidoBoleta = (contenidoJson) => {
-  if (typeof contenidoJson !== 'string') return contenidoJson
-  try {
-    return JSON.parse(contenidoJson)
-  } catch (e) {
-    console.error('Error parseando contenido_json:', e)
-    return null
-  }
-}
-
-const itemBoletaHtml = (item) => `
-  <div class="item">
-    <span>${item.cantidad}x ${item.producto}</span>
-    ${item.subtotal ? `<span>S/ ${Number.parseFloat(item.subtotal).toFixed(2)}</span>` : ''}
-  </div>
-`
-
-const detallePagoHtml = (contenido) => {
-  if (contenido.monto_recibido) {
-    return `
-      <p style="margin: 3px 0;"><strong>Monto Recibido:</strong> S/ ${Number.parseFloat(contenido.monto_recibido).toFixed(2)}</p>
-      <p style="margin: 3px 0; font-size: 14px; font-weight: bold;"><strong>VUELTO:</strong> S/ ${Number.parseFloat(contenido.vuelto || 0).toFixed(2)}</p>
-    `
-  }
-  const texto = contenido.metodo_pago === 'yape' ? 'Pago digital - Sin vuelto' : 'Monto exacto'
-  return `<p style="margin: 3px 0;"><em>${texto}</em></p>`
-}
-
-const seccionPagoHtml = (contenido) => `
-  <div class="total-final" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-    <span>TOTAL:</span><span>S/ ${Number.parseFloat(contenido.total).toFixed(2)}</span>
-  </div>
-  <div style="border: 1px solid #000; padding: 8px; margin: 10px 0;">
-    <p style="margin: 3px 0;"><strong>Método de Pago:</strong> ${contenido.metodo_pago === 'efectivo' ? '💵 Efectivo' : '📱 Yape'}</p>
-    ${detallePagoHtml(contenido)}
-  </div>
-`
-
-const generarHtmlBoleta = (boleta, contenido, esCocina) => `
-  <!DOCTYPE html>
-  <html><head><title>Boleta ${esCocina ? 'Cocina' : 'Cliente'}</title>
-  <style>
-    body {
-      font-family: 'Courier New', monospace;
-      width: 80mm;
-      padding: 10px;
-      margin: 0 auto;
-      font-size: 12px;
-    }
-    .header {
-      text-align: center;
-      border-bottom: 2px dashed #000;
-      padding-bottom: 10px;
-      margin-bottom: 10px;
-    }
-    .header h1 { margin: 0; font-size: 18px; }
-    .header p { font-size: 14px; margin: 5px 0 0 0; }
-    .info p { margin: 5px 0; font-size: 12px; }
-    .item {
-      display: flex; justify-content: space-between;
-      margin: 5px 0;
-      font-size: 12px;
-      font-weight: ${esCocina ? 'bold' : 'normal'};
-    }
-    .items-container {
-      border-top: 2px dashed #000; border-bottom: 2px dashed #000;
-      padding: 10px 0; margin: 10px 0;
-    }
-    .total-final { font-size: 16px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; }
-    .footer { text-align: center; margin-top: 20px; font-size: 10px; }
-    .tipo-badge {
-      background: ${esCocina ? '#fef3c7' : '#dbeafe'};
-      padding: 8px; text-align: center; font-weight: bold;
-      font-size: 14px; margin-bottom: 10px;
-    }
-    @media print { body { margin: 0; } }
-  </style>
-  </head><body>
-    <div class="tipo-badge">${esCocina ? '🍳 BOLETA COCINA' : '🧾 BOLETA CLIENTE'}</div>
-    <div class="header">
-      <h1>🍗 POLLERÍA LAS DELICIAS</h1>
-      <p><strong>${boleta.numero_boleta}</strong></p>
-    </div>
-    <div class="info">
-      <p><strong>Pedido:</strong> ${contenido.numero_pedido}</p>
-      <p><strong>Tipo:</strong> ${contenido.tipo_atencion.toUpperCase()}</p>
-      ${contenido.nombre_cliente ? `<p><strong>Cliente:</strong> ${contenido.nombre_cliente}</p>` : ''}
-      <p><strong>Fecha:</strong> ${new Date(contenido.fecha).toLocaleString('es-PE')}</p>
-    </div>
-    <div class="items-container">
-      ${contenido.items.map(itemBoletaHtml).join('')}
-    </div>
-    ${esCocina ? '' : seccionPagoHtml(contenido)}
-    <div class="footer"><p>¡Gracias por su preferencia!</p></div>
-  </body></html>
-`
 
 export default function NuevoPedido() {
   const navigate = useNavigate()
@@ -257,7 +159,16 @@ export default function NuevoPedido() {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
-    printWindow.document.write(generarHtmlBoleta(boleta, contenido, tipo === 'cocina'))
+    printWindow.document.write(generarHtmlBoleta({
+      esCocina: tipo === 'cocina',
+      documento: boleta.numero_boleta,
+      numeroPedido: contenido.numero_pedido,
+      tipoAtencion: contenido.tipo_atencion,
+      nombreCliente: contenido.nombre_cliente,
+      fecha: contenido.fecha,
+      items: contenido.items.map(i => ({ cantidad: i.cantidad, nombre: i.producto, subtotal: i.subtotal })),
+      pago: contenido
+    }))
     printWindow.document.close()
     printWindow.print()
   }

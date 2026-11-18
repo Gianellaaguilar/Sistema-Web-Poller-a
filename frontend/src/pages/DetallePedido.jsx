@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FiArrowLeft, FiPrinter, FiClock, FiCheckCircle, FiPackage, FiTruck, FiXCircle, FiUser, FiMapPin, FiPhone, FiCreditCard } from 'react-icons/fi'
 import { api } from '../services/api'
+import { generarHtmlBoleta } from '../utils/boleta'
 import toast from 'react-hot-toast'
 
 const estadoConfig = {
@@ -13,128 +14,6 @@ const estadoConfig = {
 }
 
 const tipoAtencionEmoji = { salon: '🪑', delivery: '🛵', recojo: '📦' }
-
-// ---- Helpers para impresión de boletas ----
-
-const itemBoletaHtml = (detalle, esCliente) => `
-  <div class="item">
-    <span>${detalle.cantidad}x ${detalle.producto_nombre}</span>
-    ${esCliente ? `<span>S/ ${Number.parseFloat(detalle.subtotal).toFixed(2)}</span>` : ''}
-  </div>
-`
-
-const detallePagoHtml = (pedido) => {
-  if (pedido.monto_recibido) {
-    return `
-      <p style="margin: 3px 0;"><strong>Recibido:</strong> S/ ${Number.parseFloat(pedido.monto_recibido).toFixed(2)}</p>
-      <p style="margin: 3px 0; font-weight: bold;"><strong>VUELTO:</strong> S/ ${Number.parseFloat(pedido.vuelto || 0).toFixed(2)}</p>
-    `
-  }
-  const texto = pedido.metodo_pago === 'yape' ? 'Pago digital' : 'Monto exacto'
-  return `<p style="margin: 3px 0;"><em>${texto}</em></p>`
-}
-
-const seccionPagoHtml = (pedido) => `
-  <div class="total"><span>TOTAL:</span><span>S/ ${Number.parseFloat(pedido.total).toFixed(2)}</span></div>
-  <div style="border: 1px solid #000; padding: 8px; margin: 10px 0;">
-    <p style="margin: 3px 0;"><strong>Pago:</strong> ${pedido.metodo_pago === 'efectivo' ? '💵 Efectivo' : '📱 Yape'}</p>
-    ${detallePagoHtml(pedido)}
-  </div>
-`
-
-const generarHtmlBoleta = (pedido, detalles, esCocina) => {
-  const titulo = esCocina ? 'Cocina' : 'Cliente'
-  const badge = esCocina ? '🍳 BOLETA COCINA' : '🧾 BOLETA CLIENTE'
-  const badgeColor = esCocina ? '#fef3c7' : '#dbeafe'
-  const itemWeight = esCocina ? 'bold' : 'normal'
-  const clienteHtml = pedido.nombre_cliente
-    ? `<p><strong>Cliente:</strong> ${pedido.nombre_cliente}</p>`
-    : ''
-  const itemsHtml = detalles.map(d => itemBoletaHtml(d, !esCocina)).join('')
-  const pagoHtml = esCocina ? '' : seccionPagoHtml(pedido)
-
-  return `
-    <!DOCTYPE html>
-    <html><head><title>Boleta ${titulo}</title>
-    <style>
-      body {
-        font-family: 'Courier New', monospace;
-        width: 80mm;
-        padding: 10px;
-        margin: 0 auto;
-        font-size: 12px;
-      }
-      .header {
-        text-align: center;
-        border-bottom: 2px dashed #000;
-        padding-bottom: 10px;
-      }
-      .header h2 {
-        margin: 0;
-        font-size: 18px;
-      }
-      .header p {
-        font-size: 14px;
-        margin: 5px 0 0 0;
-      }
-      .info {
-        margin: 10px 0;
-      }
-      .info p {
-        margin: 5px 0;
-        font-size: 12px;
-      }
-      .item {
-        display: flex;
-        justify-content: space-between;
-        margin: 5px 0;
-        font-size: 12px;
-        font-weight: ${itemWeight};
-      }
-      .items-container {
-        border-top: 2px dashed #000;
-        border-bottom: 2px dashed #000;
-        padding: 10px 0;
-      }
-      .total {
-        font-size: 16px;
-        font-weight: bold;
-        border-top: 2px solid #000;
-        padding-top: 10px;
-        display: flex;
-        justify-content: space-between;
-      }
-      .tipo-badge {
-        background: ${badgeColor};
-        padding: 8px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 10px;
-      }
-      @media print {
-        body { margin: 0; }
-      }
-    </style>
-    </head><body>
-      <div class="tipo-badge">${badge}</div>
-      <div class="header">
-        <h2>🍗 POLLERÍA LAS DELICIAS</h2>
-        <p>${pedido.numero_pedido}</p>
-      </div>
-      <div class="info">
-        <p><strong>Tipo:</strong> ${pedido.tipo_atencion.toUpperCase()}</p>
-        ${clienteHtml}
-        <p><strong>Fecha:</strong> ${new Date(pedido.created_at).toLocaleString('es-PE')}</p>
-      </div>
-      <div class="items-container">
-        ${itemsHtml}
-      </div>
-      ${pagoHtml}
-      <p style="text-align: center; margin-top: 20px; font-size: 10px;">¡Gracias por su preferencia!</p>
-    </body></html>
-  `
-}
 
 export default function DetallePedido() {
   const { id } = useParams()
@@ -181,7 +60,17 @@ export default function DetallePedido() {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
-    printWindow.document.write(generarHtmlBoleta(pedido, detalles, tipo === 'cocina'))
+    const esCocina = tipo === 'cocina'
+    const html = generarHtmlBoleta({
+      esCocina,
+      documento: pedido.numero_pedido,
+      tipoAtencion: pedido.tipo_atencion,
+      nombreCliente: pedido.nombre_cliente,
+      fecha: pedido.created_at,
+      items: detalles.map(d => ({ cantidad: d.cantidad, nombre: d.producto_nombre, subtotal: esCocina ? null : d.subtotal })),
+      pago: pedido
+    })
+    printWindow.document.write(html)
     printWindow.document.close()
     printWindow.print()
   }
