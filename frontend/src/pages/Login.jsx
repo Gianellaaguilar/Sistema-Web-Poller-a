@@ -56,10 +56,11 @@ export default function Login() {
         <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-dark-700 font-medium mb-2">Usuario</label>
+              <label htmlFor="usuario" className="block text-dark-700 font-medium mb-2">Usuario</label>
               <div className="relative">
                 <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-400 text-xl" />
                 <input
+                  id="usuario"
                   type="text"
                   value={usuario}
                   onChange={(e) => setUsuario(e.target.value)}
@@ -71,10 +72,11 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-dark-700 font-medium mb-2">Contraseña</label>
+              <label htmlFor="password" className="block text-dark-700 font-medium mb-2">Contraseña</label>
               <div className="relative">
                 <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-400 text-xl" />
                 <input
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -95,7 +97,7 @@ export default function Login() {
               ) : (
                 <>
                   <FiLogIn className="text-xl" />
-                  Iniciar Sesión
+                  <span>Iniciar Sesión</span>
                 </>
               )}
             </button>

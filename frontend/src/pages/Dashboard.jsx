@@ -13,7 +13,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    cargarDatos()
+    void cargarDatos()
   }, [])
 
   const cargarDatos = async () => {
@@ -63,7 +63,7 @@ export default function Dashboard() {
         </div>
         <Link to="/nuevo-pedido" className="btn-primary inline-flex items-center gap-2">
           <FiShoppingCart className="text-xl" />
-          Nuevo Pedido
+          <span>Nuevo Pedido</span>
         </Link>
       </div>
 
@@ -87,7 +87,7 @@ export default function Dashboard() {
             </div>
             <span className="text-xs font-medium text-dark-400 bg-dark-100 px-2 py-1 rounded-full">HOY</span>
           </div>
-          <p className="text-3xl font-bold text-dark-950">{formatMoney(parseFloat(stats?.total_ventas || 0))}</p>
+          <p className="text-3xl font-bold text-dark-950">{formatMoney(Number.parseFloat(stats?.total_ventas || 0))}</p>
           <p className="text-dark-500 text-sm mt-1">Ventas totales</p>
         </div>
 
@@ -110,7 +110,7 @@ export default function Dashboard() {
             <span className="text-xs font-medium text-dark-400 bg-dark-100 px-2 py-1 rounded-full">HOY</span>
           </div>
           <p className="text-3xl font-bold text-dark-950">
-            {(parseInt(stats?.pedidos_delivery || 0) + parseInt(stats?.pedidos_recojo || 0))}
+            {(Number.parseInt(stats?.pedidos_delivery || 0) + Number.parseInt(stats?.pedidos_recojo || 0))}
           </p>
           <p className="text-dark-500 text-sm mt-1">Delivery + Recojo</p>
         </div>
@@ -123,7 +123,7 @@ export default function Dashboard() {
           <div className="p-6 border-b border-dark-100 flex items-center justify-between">
             <h3 className="font-semibold text-dark-950 flex items-center gap-2">
               <FiClock className="text-yellow-500" />
-              Pedidos Pendientes
+              <span>Pedidos Pendientes</span>
             </h3>
             <span className="bg-yellow-100 text-yellow-700 text-xs font-semibold px-2 py-1 rounded-full">
               {pedidosPendientes.length}
@@ -160,7 +160,7 @@ export default function Dashboard() {
           <div className="p-6 border-b border-dark-100 flex items-center justify-between">
             <h3 className="font-semibold text-dark-950 flex items-center gap-2">
               <FiCheckCircle className="text-blue-500" />
-              En Preparación
+              <span>En Preparación</span>
             </h3>
             <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
               {pedidosPreparando.length}
@@ -203,7 +203,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-2xl font-bold text-green-700">
-                {formatMoney(parseFloat(stats?.ventas_efectivo || 0))}
+                {formatMoney(Number.parseFloat(stats?.ventas_efectivo || 0))}
               </p>
               <p className="text-green-600 text-sm">Efectivo</p>
             </div>
@@ -214,7 +214,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-2xl font-bold text-purple-700">
-                {formatMoney(parseFloat(stats?.ventas_yape || 0))}
+                {formatMoney(Number.parseFloat(stats?.ventas_yape || 0))}
               </p>
               <p className="text-purple-600 text-sm">Yape</p>
             </div>

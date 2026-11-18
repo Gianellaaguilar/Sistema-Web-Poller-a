@@ -5,6 +5,107 @@ import { GiChickenOven } from 'react-icons/gi'
 import { api } from '../services/api'
 import toast from 'react-hot-toast'
 
+const tipoAtencionEmoji = { salon: '🪑', delivery: '🛵', recojo: '📦' }
+
+// ---- Helpers para impresión de boletas ----
+
+const parsearContenidoBoleta = (contenidoJson) => {
+  if (typeof contenidoJson !== 'string') return contenidoJson
+  try {
+    return JSON.parse(contenidoJson)
+  } catch (e) {
+    console.error('Error parseando contenido_json:', e)
+    return null
+  }
+}
+
+const itemBoletaHtml = (item) => `
+  <div class="item">
+    <span>${item.cantidad}x ${item.producto}</span>
+    ${item.subtotal ? `<span>S/ ${Number.parseFloat(item.subtotal).toFixed(2)}</span>` : ''}
+  </div>
+`
+
+const detallePagoHtml = (contenido) => {
+  if (contenido.monto_recibido) {
+    return `
+      <p style="margin: 3px 0;"><strong>Monto Recibido:</strong> S/ ${Number.parseFloat(contenido.monto_recibido).toFixed(2)}</p>
+      <p style="margin: 3px 0; font-size: 14px; font-weight: bold;"><strong>VUELTO:</strong> S/ ${Number.parseFloat(contenido.vuelto || 0).toFixed(2)}</p>
+    `
+  }
+  const texto = contenido.metodo_pago === 'yape' ? 'Pago digital - Sin vuelto' : 'Monto exacto'
+  return `<p style="margin: 3px 0;"><em>${texto}</em></p>`
+}
+
+const seccionPagoHtml = (contenido) => `
+  <div class="total-final" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+    <span>TOTAL:</span><span>S/ ${Number.parseFloat(contenido.total).toFixed(2)}</span>
+  </div>
+  <div style="border: 1px solid #000; padding: 8px; margin: 10px 0;">
+    <p style="margin: 3px 0;"><strong>Método de Pago:</strong> ${contenido.metodo_pago === 'efectivo' ? '💵 Efectivo' : '📱 Yape'}</p>
+    ${detallePagoHtml(contenido)}
+  </div>
+`
+
+const generarHtmlBoleta = (boleta, contenido, esCocina) => `
+  <!DOCTYPE html>
+  <html><head><title>Boleta ${esCocina ? 'Cocina' : 'Cliente'}</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      width: 80mm;
+      padding: 10px;
+      margin: 0 auto;
+      font-size: 12px;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px dashed #000;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .header h1 { margin: 0; font-size: 18px; }
+    .header p { font-size: 14px; margin: 5px 0 0 0; }
+    .info p { margin: 5px 0; font-size: 12px; }
+    .item {
+      display: flex; justify-content: space-between;
+      margin: 5px 0;
+      font-size: 12px;
+      font-weight: ${esCocina ? 'bold' : 'normal'};
+    }
+    .items-container {
+      border-top: 2px dashed #000; border-bottom: 2px dashed #000;
+      padding: 10px 0; margin: 10px 0;
+    }
+    .total-final { font-size: 16px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; }
+    .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+    .tipo-badge {
+      background: ${esCocina ? '#fef3c7' : '#dbeafe'};
+      padding: 8px; text-align: center; font-weight: bold;
+      font-size: 14px; margin-bottom: 10px;
+    }
+    @media print { body { margin: 0; } }
+  </style>
+  </head><body>
+    <div class="tipo-badge">${esCocina ? '🍳 BOLETA COCINA' : '🧾 BOLETA CLIENTE'}</div>
+    <div class="header">
+      <h1>🍗 POLLERÍA LAS DELICIAS</h1>
+      <p><strong>${boleta.numero_boleta}</strong></p>
+    </div>
+    <div class="info">
+      <p><strong>Pedido:</strong> ${contenido.numero_pedido}</p>
+      <p><strong>Tipo:</strong> ${contenido.tipo_atencion.toUpperCase()}</p>
+      ${contenido.nombre_cliente ? `<p><strong>Cliente:</strong> ${contenido.nombre_cliente}</p>` : ''}
+      <p><strong>Fecha:</strong> ${new Date(contenido.fecha).toLocaleString('es-PE')}</p>
+    </div>
+    <div class="items-container">
+      ${contenido.items.map(itemBoletaHtml).join('')}
+    </div>
+    ${esCocina ? '' : seccionPagoHtml(contenido)}
+    <div class="footer"><p>¡Gracias por su preferencia!</p></div>
+  </body></html>
+`
+
 export default function NuevoPedido() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -28,7 +129,7 @@ export default function NuevoPedido() {
   const [mostrarBoletas, setMostrarBoletas] = useState(false)
 
   useEffect(() => {
-    cargarProductos()
+    void cargarProductos()
   }, [])
 
   const cargarProductos = async () => {
@@ -97,7 +198,7 @@ export default function NuevoPedido() {
   const calcularTotal = () => carrito.reduce((acc, item) => acc + (item.producto.precio * item.cantidad), 0)
   
   const calcularVuelto = () => {
-    const monto = parseFloat(montoRecibido) || 0
+    const monto = Number.parseFloat(montoRecibido) || 0
     return monto > calcularTotal() ? monto - calcularTotal() : 0
   }
 
@@ -110,7 +211,7 @@ export default function NuevoPedido() {
     if (tipoAtencion === 'delivery' && !direccion.trim()) return toast.error('Ingresa la dirección de delivery')
     
     // Solo validar monto si se ingresó algo
-    if (metodoPago === 'efectivo' && montoRecibido && parseFloat(montoRecibido) < calcularTotal()) {
+    if (metodoPago === 'efectivo' && montoRecibido && Number.parseFloat(montoRecibido) < calcularTotal()) {
       return toast.error('El monto recibido es insuficiente')
     }
 
@@ -122,13 +223,13 @@ export default function NuevoPedido() {
         direccion_delivery: tipoAtencion === 'delivery' ? direccion : null,
         telefono_cliente: telefono || null,
         metodo_pago: metodoPago,
-        monto_recibido: metodoPago === 'efectivo' ? parseFloat(montoRecibido) || null : null,
+        monto_recibido: metodoPago === 'efectivo' ? Number.parseFloat(montoRecibido) || null : null,
         notas: notas || null,
         items: carrito.map(item => ({
           producto_id: item.producto.id,
           producto_nombre: item.producto.nombre,
           cantidad: item.cantidad,
-          precio_unitario: parseFloat(item.producto.precio)
+          precio_unitario: Number.parseFloat(item.producto.precio)
         }))
       })
 
@@ -149,99 +250,14 @@ export default function NuevoPedido() {
   const imprimirBoleta = (tipo) => {
     if (!pedidoCreado) return
     const boleta = tipo === 'cocina' ? pedidoCreado.boletas.cocina : pedidoCreado.boletas.cliente
-    
-    // Parsear contenido_json si viene como string
-    let contenido = boleta.contenido_json
-    if (typeof contenido === 'string') {
-      try {
-        contenido = JSON.parse(contenido)
-      } catch (e) {
-        console.error('Error parseando contenido_json:', e)
-        return
-      }
-    }
-    
+
+    const contenido = parsearContenidoBoleta(boleta.contenido_json)
+    if (!contenido) return
+
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
-    const esCocina = tipo === 'cocina'
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html><head><title>Boleta ${esCocina ? 'Cocina' : 'Cliente'}</title>
-      <style>
-        body { 
-          font-family: 'Courier New', monospace; 
-          width: 80mm; 
-          padding: 10px; 
-          margin: 0 auto; 
-          font-size: 12px; 
-        }
-        .header { 
-          text-align: center; 
-          border-bottom: 2px dashed #000; 
-          padding-bottom: 10px; 
-          margin-bottom: 10px; 
-        }
-        .header h1 { margin: 0; font-size: 18px; }
-        .header p { font-size: 14px; margin: 5px 0 0 0; }
-        .info p { margin: 5px 0; font-size: 12px; }
-        .item { 
-          display: flex; justify-content: space-between; 
-          margin: 5px 0; 
-          font-size: 12px;
-          font-weight: ${esCocina ? 'bold' : 'normal'};
-        }
-        .items-container {
-          border-top: 2px dashed #000; border-bottom: 2px dashed #000; 
-          padding: 10px 0; margin: 10px 0;
-        }
-        .total-final { font-size: 16px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; }
-        .footer { text-align: center; margin-top: 20px; font-size: 10px; }
-        .tipo-badge {
-          background: ${esCocina ? '#fef3c7' : '#dbeafe'}; 
-          padding: 8px; text-align: center; font-weight: bold;
-          font-size: 14px; margin-bottom: 10px;
-        }
-        @media print { body { margin: 0; } }
-      </style>
-      </head><body>
-        <div class="tipo-badge">${esCocina ? '🍳 BOLETA COCINA' : '🧾 BOLETA CLIENTE'}</div>
-        <div class="header">
-          <h1>🍗 POLLERÍA LAS DELICIAS</h1>
-          <p><strong>${boleta.numero_boleta}</strong></p>
-        </div>
-        <div class="info">
-          <p><strong>Pedido:</strong> ${contenido.numero_pedido}</p>
-          <p><strong>Tipo:</strong> ${contenido.tipo_atencion.toUpperCase()}</p>
-          ${contenido.nombre_cliente ? `<p><strong>Cliente:</strong> ${contenido.nombre_cliente}</p>` : ''}
-          <p><strong>Fecha:</strong> ${new Date(contenido.fecha).toLocaleString('es-PE')}</p>
-        </div>
-        <div class="items-container">
-          ${contenido.items.map(item => `
-            <div class="item">
-              <span>${item.cantidad}x ${item.producto}</span>
-              ${item.subtotal ? `<span>S/ ${parseFloat(item.subtotal).toFixed(2)}</span>` : ''}
-            </div>
-          `).join('')}
-        </div>
-        ${tipo === 'cliente' ? `
-          <div class="total-final" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <span>TOTAL:</span><span>S/ ${parseFloat(contenido.total).toFixed(2)}</span>
-          </div>
-          <div style="border: 1px solid #000; padding: 8px; margin: 10px 0;">
-            <p style="margin: 3px 0;"><strong>Método de Pago:</strong> ${contenido.metodo_pago === 'efectivo' ? '💵 Efectivo' : '📱 Yape'}</p>
-            ${contenido.monto_recibido ? `
-              <p style="margin: 3px 0;"><strong>Monto Recibido:</strong> S/ ${parseFloat(contenido.monto_recibido).toFixed(2)}</p>
-              <p style="margin: 3px 0; font-size: 14px; font-weight: bold;"><strong>VUELTO:</strong> S/ ${parseFloat(contenido.vuelto || 0).toFixed(2)}</p>
-            ` : `
-              <p style="margin: 3px 0;"><em>${contenido.metodo_pago === 'yape' ? 'Pago digital - Sin vuelto' : 'Monto exacto'}</em></p>
-            `}
-          </div>
-        ` : ''}
-        <div class="footer"><p>¡Gracias por su preferencia!</p></div>
-      </body></html>
-    `)
+    printWindow.document.write(generarHtmlBoleta(boleta, contenido, tipo === 'cocina'))
     printWindow.document.close()
     printWindow.print()
   }
@@ -280,13 +296,13 @@ export default function NuevoPedido() {
         <div className="flex items-center gap-2">
           <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium ${paso === 1 ? 'bg-primary-500 text-white' : 'bg-green-100 text-green-700'}`}>
             <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-sm">1</span>
-            Datos del Cliente
+            <span>Datos del Cliente</span>
             {paso > 1 && <FiCheck />}
           </div>
           <FiChevronRight className="text-dark-300" />
           <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium ${paso === 2 ? 'bg-primary-500 text-white' : 'bg-dark-100 text-dark-400'}`}>
             <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-sm">2</span>
-            Seleccionar Productos
+            <span>Seleccionar Productos</span>
           </div>
         </div>
       </div>
@@ -297,13 +313,13 @@ export default function NuevoPedido() {
           <div className="card p-6">
             <h3 className="font-semibold text-dark-950 text-lg mb-6 flex items-center gap-2">
               <FiUser className="text-primary-500" />
-              Información del Pedido
+              <span>Información del Pedido</span>
             </h3>
             
             <div className="space-y-5">
               {/* Tipo de atención */}
               <div>
-                <label className="block text-dark-700 font-medium mb-3">Tipo de Atención *</label>
+                <p className="block text-dark-700 font-medium mb-3">Tipo de Atención *</p>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { id: 'salon', emoji: '🪑', label: 'Salón' },
@@ -328,12 +344,13 @@ export default function NuevoPedido() {
 
               {/* Nombre del cliente - OBLIGATORIO */}
               <div>
-                <label className="block text-dark-700 font-medium mb-2">
+                <label htmlFor="nombreCliente" className="block text-dark-700 font-medium mb-2">
                   Nombre del Cliente <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-400" />
                   <input
+                    id="nombreCliente"
                     type="text"
                     value={nombreCliente}
                     onChange={(e) => setNombreCliente(e.target.value)}
@@ -350,12 +367,13 @@ export default function NuevoPedido() {
 
               {/* Teléfono - OBLIGATORIO para todos */}
               <div>
-                <label className="block text-dark-700 font-medium mb-2">
+                <label htmlFor="telefono" className="block text-dark-700 font-medium mb-2">
                   Teléfono <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-400" />
                   <input
+                    id="telefono"
                     type="tel"
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
@@ -373,12 +391,13 @@ export default function NuevoPedido() {
               {/* Dirección - SOLO para delivery */}
               {tipoAtencion === 'delivery' && (
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-                  <label className="block text-dark-700 font-medium mb-2">
+                  <label htmlFor="direccion" className="block text-dark-700 font-medium mb-2">
                     Dirección de Entrega <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-400" />
                     <input
+                      id="direccion"
                       type="text"
                       value={direccion}
                       onChange={(e) => setDireccion(e.target.value)}
@@ -396,7 +415,7 @@ export default function NuevoPedido() {
 
               {/* Método de pago */}
               <div>
-                <label className="block text-dark-700 font-medium mb-3">Método de Pago *</label>
+                <p className="block text-dark-700 font-medium mb-3">Método de Pago *</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setMetodoPago('efectivo')}
@@ -423,10 +442,11 @@ export default function NuevoPedido() {
 
               {/* Notas - OPCIONAL */}
               <div>
-                <label className="block text-dark-700 font-medium mb-2">
+                <label htmlFor="notas" className="block text-dark-700 font-medium mb-2">
                   Notas <span className="text-dark-400 font-normal">(opcional)</span>
                 </label>
                 <textarea
+                  id="notas"
                   value={notas}
                   onChange={(e) => setNotas(e.target.value)}
                   placeholder="Instrucciones especiales, alergias, etc."
@@ -454,7 +474,7 @@ export default function NuevoPedido() {
                     : 'bg-dark-200 text-dark-400 cursor-not-allowed'
                 }`}
               >
-                Continuar a Productos
+                <span>Continuar a Productos</span>
                 <FiChevronRight className="text-xl" />
               </button>
             </div>
@@ -471,7 +491,7 @@ export default function NuevoPedido() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="text-3xl">
-                    {tipoAtencion === 'salon' ? '🪑' : tipoAtencion === 'delivery' ? '🛵' : '📦'}
+                    {tipoAtencionEmoji[tipoAtencion]}
                   </div>
                   <div>
                     <p className="font-semibold text-dark-950">
@@ -570,12 +590,13 @@ export default function NuevoPedido() {
               {/* Monto recibido (solo para efectivo) */}
               {metodoPago === 'efectivo' && carrito.length > 0 && (
                 <div className="p-4 border-t border-dark-100 bg-green-50">
-                  <label className="block text-dark-700 text-sm font-medium mb-2">
+                  <label htmlFor="montoRecibido" className="block text-dark-700 text-sm font-medium mb-2">
                     Monto Recibido <span className="text-dark-400 font-normal">(opcional)</span>
                   </label>
                   <div className="relative">
                     <FiCreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
                     <input
+                      id="montoRecibido"
                       type="number"
                       value={montoRecibido}
                       onChange={(e) => setMontoRecibido(e.target.value)}
@@ -588,7 +609,7 @@ export default function NuevoPedido() {
                       💰 Vuelto: {formatMoney(calcularVuelto())}
                     </p>
                   )}
-                  {montoRecibido && parseFloat(montoRecibido) < calcularTotal() && (
+                  {montoRecibido && Number.parseFloat(montoRecibido) < calcularTotal() && (
                     <p className="text-orange-600 text-sm mt-2 flex items-center gap-1">
                       <FiAlertCircle /> El monto no cubre el total
                     </p>
@@ -604,11 +625,11 @@ export default function NuevoPedido() {
                 </div>
                 
                 {/* Resumen de pago para efectivo */}
-                {metodoPago === 'efectivo' && montoRecibido && parseFloat(montoRecibido) >= calcularTotal() && (
+                {metodoPago === 'efectivo' && montoRecibido && Number.parseFloat(montoRecibido) >= calcularTotal() && (
                   <div className="bg-green-50 rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-dark-600">Cliente paga con:</span>
-                      <span className="font-semibold text-dark-950">{formatMoney(parseFloat(montoRecibido))}</span>
+                      <span className="font-semibold text-dark-950">{formatMoney(Number.parseFloat(montoRecibido))}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-dark-600">Vuelto a entregar:</span>

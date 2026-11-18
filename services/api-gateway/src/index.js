@@ -34,7 +34,16 @@ app.get('/health', (req, res) => {
 // Función helper para hacer proxy manual
 async function proxyRequest(serviceUrl, req, res) {
   try {
-    const url = `${serviceUrl}${req.originalUrl}`;
+    const base = new URL(serviceUrl);
+    const url = new URL(req.originalUrl, base);
+
+    // Validar que la URL resultante siga apuntando al servicio interno
+    if (url.origin !== base.origin) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL no permitida'
+      });
+    }
     
     const options = {
       method: req.method,
@@ -53,7 +62,7 @@ async function proxyRequest(serviceUrl, req, res) {
       options.body = JSON.stringify(req.body);
     }
     
-    const response = await fetch(url, options);
+    const response = await fetch(url.toString(), options);
     const data = await response.json();
     
     res.status(response.status).json(data);

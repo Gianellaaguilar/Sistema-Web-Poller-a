@@ -31,27 +31,27 @@ async function getAll(req, res) {
         SELECT * FROM pedidos 
         WHERE DATE(created_at) = ${fecha} AND estado = ${estado}
         ORDER BY created_at DESC
-        LIMIT ${parseInt(limit)}
+        LIMIT ${Number.parseInt(limit)}
       `;
     } else if (fecha) {
       result = await sql`
         SELECT * FROM pedidos 
         WHERE DATE(created_at) = ${fecha}
         ORDER BY created_at DESC
-        LIMIT ${parseInt(limit)}
+        LIMIT ${Number.parseInt(limit)}
       `;
     } else if (estado) {
       result = await sql`
         SELECT * FROM pedidos 
         WHERE estado = ${estado}
         ORDER BY created_at DESC
-        LIMIT ${parseInt(limit)}
+        LIMIT ${Number.parseInt(limit)}
       `;
     } else {
       result = await sql`
         SELECT * FROM pedidos 
         ORDER BY created_at DESC
-        LIMIT ${parseInt(limit)}
+        LIMIT ${Number.parseInt(limit)}
       `;
     }
 

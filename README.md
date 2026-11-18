@@ -33,20 +33,16 @@ Sistema de gestión de pedidos para trabajadores, desarrollado con **Arquitectur
 
 ## 🗄️ Bases de Datos (Separadas por Servicio)
 
-| Servicio | Base de Datos | Script SQL | Tablas |
-|----------|---------------|------------|--------|
-| Auth Service | `auth_db` | `database/auth-service.sql` | `trabajadores` |
-| Products Service | `products_db` | `database/products-service.sql` | `categorias`, `productos` |
-| Orders Service | `orders_db` | `database/orders-service.sql` | `pedidos`, `detalle_pedidos`, `boletas` |
+| Servicio | Base de Datos | Tablas |
+|----------|---------------|--------|
+| Auth Service | `auth_db` | `trabajadores` |
+| Products Service | `products_db` | `categorias`, `productos` |
+| Orders Service | `orders_db` | `pedidos`, `detalle_pedidos`, `boletas` |
 
 ## 📦 Estructura del Proyecto
 
 ```
 polleria-las-delicias/
-├── database/
-│   ├── auth-service.sql        # BD para Auth Service
-│   ├── products-service.sql    # BD para Products Service
-│   └── orders-service.sql      # BD para Orders Service
 ├── services/
 │   ├── api-gateway/            # Punto de entrada (puerto 3000)
 │   ├── auth-service/           # Autenticación (puerto 3001)
@@ -63,9 +59,9 @@ polleria-las-delicias/
 
 En [console.neon.tech](https://console.neon.tech), crea **3 bases de datos separadas**:
 
-1. **auth_db** - Ejecuta `database/auth-service.sql`
-2. **products_db** - Ejecuta `database/products-service.sql`  
-3. **orders_db** - Ejecuta `database/orders-service.sql`
+1. **auth_db**
+2. **products_db**
+3. **orders_db**
 
 > En Neon Tech puedes crear múltiples bases de datos en un mismo proyecto.
 
@@ -75,21 +71,21 @@ En [console.neon.tech](https://console.neon.tech), crea **3 bases de datos separ
 ```env
 PORT=3001
 DATABASE_URL=postgresql://user:pass@host.neon.tech/auth_db?sslmode=require
-JWT_SECRET=polleria-las-delicias-secret-key-2024
+JWT_SECRET=tu-secret-key
 ```
 
 **services/products-service/.env**
 ```env
 PORT=3002
 DATABASE_URL=postgresql://user:pass@host.neon.tech/products_db?sslmode=require
-JWT_SECRET=polleria-las-delicias-secret-key-2024
+JWT_SECRET=tu-secret-key
 ```
 
 **services/orders-service/.env**
 ```env
 PORT=3003
 DATABASE_URL=postgresql://user:pass@host.neon.tech/orders_db?sslmode=require
-JWT_SECRET=polleria-las-delicias-secret-key-2024
+JWT_SECRET=tu-secret-key
 ```
 
 **services/api-gateway/.env**
@@ -127,14 +123,7 @@ npm run dev:frontend  # Terminal 5
 - **Frontend**: http://localhost:5173
 - **API Gateway**: http://localhost:3000/health/all
 
-## 🔐 Credenciales
-
-```
-Usuario: trabajador1
-Contraseña: polleria123
-```
-
-## 🔄 Comunicación entre Servicios
+##  Comunicación entre Servicios
 
 Como cada servicio tiene su propia base de datos, la comunicación es así:
 

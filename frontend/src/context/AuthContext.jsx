@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 import { api } from '../services/api'
 
 const AuthContext = createContext(null)
@@ -20,9 +20,9 @@ export function AuthProvider({ children }) {
     setLoading(false)
   }, [])
 
-  const login = async (usuario, password) => {
+  const login = useCallback(async (usuario, password) => {
     const response = await api.post('/auth/login', { usuario, password })
-    
+
     if (response.success) {
       const { token, trabajador } = response.data
       localStorage.setItem('token', token)
@@ -30,19 +30,21 @@ export function AuthProvider({ children }) {
       api.setToken(token)
       setUser(trabajador)
     }
-    
-    return response
-  }
 
-  const logout = () => {
+    return response
+  }, [])
+
+  const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     api.setToken(null)
     setUser(null)
-  }
+  }, [])
+
+  const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

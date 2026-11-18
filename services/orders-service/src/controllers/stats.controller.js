@@ -14,11 +14,12 @@ async function getResumen(req, res) {
       case 'dia':
         fechaInicio = hoy.toISOString().split('T')[0];
         break;
-      case 'semana':
+      case 'semana': {
         const inicioSemana = new Date(hoy);
         inicioSemana.setDate(hoy.getDate() - hoy.getDay());
         fechaInicio = inicioSemana.toISOString().split('T')[0];
         break;
+      }
       case 'mes':
         fechaInicio = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
         break;

@@ -9,7 +9,7 @@ export default function Reportes() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    cargarEstadisticas()
+    void cargarEstadisticas()
   }, [periodo])
 
   const cargarEstadisticas = async () => {
@@ -30,8 +30,8 @@ export default function Reportes() {
 
   const periodoLabels = { dia: 'Hoy', semana: 'Esta Semana', mes: 'Este Mes' }
 
-  const totalPorTipo = stats ? parseInt(stats.pedidos_salon || 0) + parseInt(stats.pedidos_delivery || 0) + parseInt(stats.pedidos_recojo || 0) : 0
-  const totalPorPago = stats ? parseFloat(stats.ventas_efectivo || 0) + parseFloat(stats.ventas_yape || 0) : 0
+  const totalPorTipo = stats ? Number.parseInt(stats.pedidos_salon || 0) + Number.parseInt(stats.pedidos_delivery || 0) + Number.parseInt(stats.pedidos_recojo || 0) : 0
+  const totalPorPago = stats ? Number.parseFloat(stats.ventas_efectivo || 0) + Number.parseFloat(stats.ventas_yape || 0) : 0
 
   return (
     <div className="animate-fade-in">
@@ -71,7 +71,7 @@ export default function Reportes() {
               <div className="w-14 h-14 bg-gradient-to-br from-accent-400 to-accent-600 rounded-2xl flex items-center justify-center shadow-lg mb-4">
                 <FiDollarSign className="text-2xl text-white" />
               </div>
-              <p className="text-4xl font-bold text-dark-950">{formatMoney(parseFloat(stats.total_ventas || 0))}</p>
+              <p className="text-4xl font-bold text-dark-950">{formatMoney(Number.parseFloat(stats.total_ventas || 0))}</p>
               <p className="text-dark-500 mt-1">Ventas Totales</p>
             </div>
 
@@ -80,7 +80,7 @@ export default function Reportes() {
                 <FiTrendingUp className="text-2xl text-white" />
               </div>
               <p className="text-4xl font-bold text-dark-950">
-                {stats.total_pedidos > 0 ? formatMoney(parseFloat(stats.total_ventas || 0) / stats.total_pedidos) : formatMoney(0)}
+                {stats.total_pedidos > 0 ? formatMoney(Number.parseFloat(stats.total_ventas || 0) / stats.total_pedidos) : formatMoney(0)}
               </p>
               <p className="text-dark-500 mt-1">Ticket Promedio</p>
             </div>
@@ -102,19 +102,19 @@ export default function Reportes() {
                 <div>
                   <div className="flex justify-between mb-2"><span>🪑 Salón</span><span className="font-semibold">{stats.pedidos_salon || 0}</span></div>
                   <div className="h-3 bg-dark-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${calcularPorcentaje(parseInt(stats.pedidos_salon || 0), totalPorTipo)}%` }}></div>
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${calcularPorcentaje(Number.parseInt(stats.pedidos_salon || 0), totalPorTipo)}%` }}></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between mb-2"><span>🛵 Delivery</span><span className="font-semibold">{stats.pedidos_delivery || 0}</span></div>
                   <div className="h-3 bg-dark-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${calcularPorcentaje(parseInt(stats.pedidos_delivery || 0), totalPorTipo)}%` }}></div>
+                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${calcularPorcentaje(Number.parseInt(stats.pedidos_delivery || 0), totalPorTipo)}%` }}></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between mb-2"><span>📦 Recojo</span><span className="font-semibold">{stats.pedidos_recojo || 0}</span></div>
                   <div className="h-3 bg-dark-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-orange-500 rounded-full" style={{ width: `${calcularPorcentaje(parseInt(stats.pedidos_recojo || 0), totalPorTipo)}%` }}></div>
+                    <div className="h-full bg-orange-500 rounded-full" style={{ width: `${calcularPorcentaje(Number.parseInt(stats.pedidos_recojo || 0), totalPorTipo)}%` }}></div>
                   </div>
                 </div>
               </div>
@@ -126,15 +126,15 @@ export default function Reportes() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-green-50 rounded-xl p-4 text-center">
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">💵</div>
-                  <p className="text-2xl font-bold text-green-700">{formatMoney(parseFloat(stats.ventas_efectivo || 0))}</p>
+                  <p className="text-2xl font-bold text-green-700">{formatMoney(Number.parseFloat(stats.ventas_efectivo || 0))}</p>
                   <p className="text-green-600 text-sm">Efectivo</p>
-                  <p className="text-green-500 text-xs">{calcularPorcentaje(parseFloat(stats.ventas_efectivo || 0), totalPorPago)}%</p>
+                  <p className="text-green-500 text-xs">{calcularPorcentaje(Number.parseFloat(stats.ventas_efectivo || 0), totalPorPago)}%</p>
                 </div>
                 <div className="bg-purple-50 rounded-xl p-4 text-center">
                   <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">📱</div>
-                  <p className="text-2xl font-bold text-purple-700">{formatMoney(parseFloat(stats.ventas_yape || 0))}</p>
+                  <p className="text-2xl font-bold text-purple-700">{formatMoney(Number.parseFloat(stats.ventas_yape || 0))}</p>
                   <p className="text-purple-600 text-sm">Yape</p>
-                  <p className="text-purple-500 text-xs">{calcularPorcentaje(parseFloat(stats.ventas_yape || 0), totalPorPago)}%</p>
+                  <p className="text-purple-500 text-xs">{calcularPorcentaje(Number.parseFloat(stats.ventas_yape || 0), totalPorPago)}%</p>
                 </div>
               </div>
             </div>

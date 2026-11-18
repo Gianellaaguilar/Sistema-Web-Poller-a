@@ -12,6 +12,8 @@ const estadoConfig = {
   cancelado: { icon: FiXCircle, color: 'red', label: 'Cancelado' }
 }
 
+const tipoAtencionEmoji = { salon: '🪑', delivery: '🛵', recojo: '📦' }
+
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -20,7 +22,7 @@ export default function Pedidos() {
   const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
-    cargarPedidos()
+    void cargarPedidos()
   }, [filtroEstado, filtroFecha])
 
   const cargarPedidos = async () => {
@@ -133,7 +135,7 @@ export default function Pedidos() {
                         <EstadoIcon className="mr-1" /> {estadoConf.label}
                       </span>
                       <span className="text-sm text-dark-400">
-                        {pedido.tipo_atencion === 'salon' ? '🪑' : pedido.tipo_atencion === 'delivery' ? '🛵' : '📦'} {pedido.tipo_atencion}
+                        {tipoAtencionEmoji[pedido.tipo_atencion]} {pedido.tipo_atencion}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-dark-500">
