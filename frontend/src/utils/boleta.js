@@ -30,6 +30,14 @@ const detallePagoHtml = ({ monto_recibido, vuelto, metodo_pago }) => {
   return `<p style="margin: 3px 0;"><em>${texto}</em></p>`
 }
 
+export const imprimirHtml = (html) => {
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+  printWindow.document.write(html)
+  printWindow.document.close()
+  printWindow.print()
+}
+
 const seccionPagoHtml = (pago) => `
   <div class="total"><span>TOTAL:</span><span>${formatSoles(pago.total)}</span></div>
   <div style="border: 1px solid #000; padding: 8px; margin: 10px 0;">

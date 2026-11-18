@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FiArrowLeft, FiPrinter, FiClock, FiCheckCircle, FiPackage, FiTruck, FiXCircle, FiUser, FiMapPin, FiPhone, FiCreditCard } from 'react-icons/fi'
 import { api } from '../services/api'
-import { generarHtmlBoleta } from '../utils/boleta'
+import { generarHtmlBoleta, imprimirHtml } from '../utils/boleta'
 import toast from 'react-hot-toast'
 
 const estadoConfig = {
@@ -57,11 +57,9 @@ export default function DetallePedido() {
 
   const imprimirBoleta = (tipo) => {
     if (!pedido) return
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-
     const esCocina = tipo === 'cocina'
-    const html = generarHtmlBoleta({
+
+    imprimirHtml(generarHtmlBoleta({
       esCocina,
       documento: pedido.numero_pedido,
       tipoAtencion: pedido.tipo_atencion,
@@ -69,10 +67,7 @@ export default function DetallePedido() {
       fecha: pedido.created_at,
       items: detalles.map(d => ({ cantidad: d.cantidad, nombre: d.producto_nombre, subtotal: esCocina ? null : d.subtotal })),
       pago: pedido
-    })
-    printWindow.document.write(html)
-    printWindow.document.close()
-    printWindow.print()
+    }))
   }
 
   const formatMoney = (amount) => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount)

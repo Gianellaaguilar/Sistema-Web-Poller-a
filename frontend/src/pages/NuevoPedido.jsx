@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { FiUser, FiMapPin, FiPhone, FiCreditCard, FiPlus, FiMinus, FiTrash2, FiShoppingCart, FiCheck, FiPrinter, FiAlertCircle, FiChevronRight } from 'react-icons/fi'
 import { GiChickenOven } from 'react-icons/gi'
 import { api } from '../services/api'
-import { parsearContenidoBoleta, generarHtmlBoleta } from '../utils/boleta'
+import { parsearContenidoBoleta, generarHtmlBoleta, imprimirHtml } from '../utils/boleta'
 import toast from 'react-hot-toast'
 
 const tipoAtencionEmoji = { salon: '🪑', delivery: '🛵', recojo: '📦' }
@@ -156,10 +156,7 @@ export default function NuevoPedido() {
     const contenido = parsearContenidoBoleta(boleta.contenido_json)
     if (!contenido) return
 
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-
-    printWindow.document.write(generarHtmlBoleta({
+    imprimirHtml(generarHtmlBoleta({
       esCocina: tipo === 'cocina',
       documento: boleta.numero_boleta,
       numeroPedido: contenido.numero_pedido,
@@ -169,8 +166,6 @@ export default function NuevoPedido() {
       items: contenido.items.map(i => ({ cantidad: i.cantidad, nombre: i.producto, subtotal: i.subtotal })),
       pago: contenido
     }))
-    printWindow.document.close()
-    printWindow.print()
   }
 
   const nuevoPedido = () => {
