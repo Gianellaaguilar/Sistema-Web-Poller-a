@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const app = express();
+app.disable('x-powered-by');
 const PORT = process.env.PORT || 3000;
 
 // Configuración de servicios

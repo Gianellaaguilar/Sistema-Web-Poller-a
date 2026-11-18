@@ -45,6 +45,6 @@ async function warmupDatabase() {
 }
 
 // Ejecutar warmup al cargar el módulo
-warmupDatabase();
+void warmupDatabase();
 
 module.exports = { sql, sqlWithRetry, warmupDatabase };

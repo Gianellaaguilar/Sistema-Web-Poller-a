@@ -5,6 +5,7 @@ const productsRoutes = require('./routes/products.routes');
 const categoriesRoutes = require('./routes/categories.routes');
 
 const app = express();
+app.disable('x-powered-by');
 const PORT = process.env.PORT || 3002;
 
 // Middlewares
