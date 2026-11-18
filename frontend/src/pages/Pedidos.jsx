@@ -46,7 +46,7 @@ export default function Pedidos() {
       const response = await api.patch(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado })
       if (response.success) {
         toast.success('Estado actualizado')
-        cargarPedidos()
+        await cargarPedidos()
       } else {
         toast.error(response.error)
       }
@@ -63,6 +63,70 @@ export default function Pedidos() {
     return p.numero_pedido.toLowerCase().includes(busqueda.toLowerCase()) ||
            (p.nombre_cliente && p.nombre_cliente.toLowerCase().includes(busqueda.toLowerCase()))
   })
+
+  const renderLista = () => {
+    if (pedidosFiltrados.length === 0) {
+      return (
+        <div className="card p-12 text-center">
+          <FiPackage className="text-5xl text-dark-300 mx-auto mb-4" />
+          <p className="text-dark-500">No hay pedidos</p>
+        </div>
+      )
+    }
+    return (
+      <div className="space-y-4">
+        {pedidosFiltrados.map((pedido) => {
+          const estadoConf = estadoConfig[pedido.estado]
+          const EstadoIcon = estadoConf.icon
+
+          return (
+            <div key={pedido.id} className="card p-4 hover:shadow-lg transition-shadow">
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-bold text-dark-950">{pedido.numero_pedido}</span>
+                    <span className={`badge-${pedido.estado}`}>
+                      <EstadoIcon className="mr-1" /> {estadoConf.label}
+                    </span>
+                    <span className="text-sm text-dark-400">
+                      {tipoAtencionEmoji[pedido.tipo_atencion]} {pedido.tipo_atencion}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-dark-500">
+                    <span>👤 {pedido.nombre_cliente || 'Sin nombre'}</span>
+                    <span>💳 {pedido.metodo_pago}</span>
+                    <span>🕐 {formatTime(pedido.created_at)}</span>
+                  </div>
+                </div>
+
+                <p className="text-2xl font-bold text-primary-600">{formatMoney(pedido.total)}</p>
+
+                <div className="flex items-center gap-2">
+                  {pedido.estado === 'pendiente' && (
+                    <button onClick={() => actualizarEstado(pedido.id, 'preparando')} className="px-3 py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-200">Preparar</button>
+                  )}
+                  {pedido.estado === 'preparando' && (
+                    <button onClick={() => actualizarEstado(pedido.id, 'listo')} className="px-3 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-medium hover:bg-green-200">Listo</button>
+                  )}
+                  {pedido.estado === 'listo' && (
+                    <button onClick={() => actualizarEstado(pedido.id, 'entregado')} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200">Entregar</button>
+                  )}
+                  <Link to={`/pedidos/${pedido.id}`} className="px-3 py-2 bg-dark-100 text-dark-700 rounded-xl text-sm font-medium hover:bg-dark-200 flex items-center gap-1">
+                    <FiEye /> Ver
+                  </Link>
+                  {!['entregado', 'cancelado'].includes(pedido.estado) && (
+                    <button onClick={() => confirm('¿Cancelar?') && actualizarEstado(pedido.id, 'cancelado')} className="px-3 py-2 bg-red-100 text-red-700 rounded-xl text-sm font-medium hover:bg-red-200">
+                      <FiXCircle />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <div className="animate-fade-in">
@@ -114,63 +178,8 @@ export default function Pedidos() {
         <div className="flex items-center justify-center py-12">
           <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
         </div>
-      ) : pedidosFiltrados.length === 0 ? (
-        <div className="card p-12 text-center">
-          <FiPackage className="text-5xl text-dark-300 mx-auto mb-4" />
-          <p className="text-dark-500">No hay pedidos</p>
-        </div>
       ) : (
-        <div className="space-y-4">
-          {pedidosFiltrados.map((pedido) => {
-            const estadoConf = estadoConfig[pedido.estado]
-            const EstadoIcon = estadoConf.icon
-
-            return (
-              <div key={pedido.id} className="card p-4 hover:shadow-lg transition-shadow">
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="font-bold text-dark-950">{pedido.numero_pedido}</span>
-                      <span className={`badge-${pedido.estado}`}>
-                        <EstadoIcon className="mr-1" /> {estadoConf.label}
-                      </span>
-                      <span className="text-sm text-dark-400">
-                        {tipoAtencionEmoji[pedido.tipo_atencion]} {pedido.tipo_atencion}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-dark-500">
-                      <span>👤 {pedido.nombre_cliente || 'Sin nombre'}</span>
-                      <span>💳 {pedido.metodo_pago}</span>
-                      <span>🕐 {formatTime(pedido.created_at)}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-2xl font-bold text-primary-600">{formatMoney(pedido.total)}</p>
-
-                  <div className="flex items-center gap-2">
-                    {pedido.estado === 'pendiente' && (
-                      <button onClick={() => actualizarEstado(pedido.id, 'preparando')} className="px-3 py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-200">Preparar</button>
-                    )}
-                    {pedido.estado === 'preparando' && (
-                      <button onClick={() => actualizarEstado(pedido.id, 'listo')} className="px-3 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-medium hover:bg-green-200">Listo</button>
-                    )}
-                    {pedido.estado === 'listo' && (
-                      <button onClick={() => actualizarEstado(pedido.id, 'entregado')} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200">Entregar</button>
-                    )}
-                    <Link to={`/pedidos/${pedido.id}`} className="px-3 py-2 bg-dark-100 text-dark-700 rounded-xl text-sm font-medium hover:bg-dark-200 flex items-center gap-1">
-                      <FiEye /> Ver
-                    </Link>
-                    {!['entregado', 'cancelado'].includes(pedido.estado) && (
-                      <button onClick={() => confirm('¿Cancelar?') && actualizarEstado(pedido.id, 'cancelado')} className="px-3 py-2 bg-red-100 text-red-700 rounded-xl text-sm font-medium hover:bg-red-200">
-                        <FiXCircle />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        renderLista()
       )}
     </div>
   )

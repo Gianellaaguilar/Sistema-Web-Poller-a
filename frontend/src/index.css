@@ -112,9 +112,24 @@ body {
   .badge-cancelado { @apply badge bg-red-100 text-red-800; }
 }
 
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-float {
+    animation: none;
+  }
+
+  .btn-primary,
+  .card-hover,
+  .input-field {
+    transition: none;
+  }
+}
+
 /* Print */
 @media print {
-  body { background: white !important; }
-  .no-print { display: none !important; }
+  body { background: white; }
+  .no-print { display: none; }
 }
 

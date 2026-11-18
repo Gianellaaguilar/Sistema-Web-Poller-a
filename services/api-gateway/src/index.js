@@ -77,41 +77,41 @@ async function proxyRequest(serviceUrl, req, res) {
 
 // Rutas Auth Service
 app.all('/api/auth/*', (req, res) => {
-  proxyRequest(SERVICES.auth, req, res);
+  void proxyRequest(SERVICES.auth, req, res);
 });
 
 // Rutas Products Service
 app.all('/api/productos/*', (req, res) => {
-  proxyRequest(SERVICES.products, req, res);
+  void proxyRequest(SERVICES.products, req, res);
 });
 
 app.all('/api/productos', (req, res) => {
-  proxyRequest(SERVICES.products, req, res);
+  void proxyRequest(SERVICES.products, req, res);
 });
 
 app.all('/api/categorias/*', (req, res) => {
-  proxyRequest(SERVICES.products, req, res);
+  void proxyRequest(SERVICES.products, req, res);
 });
 
 app.all('/api/categorias', (req, res) => {
-  proxyRequest(SERVICES.products, req, res);
+  void proxyRequest(SERVICES.products, req, res);
 });
 
 // Rutas Orders Service
 app.all('/api/pedidos/*', (req, res) => {
-  proxyRequest(SERVICES.orders, req, res);
+  void proxyRequest(SERVICES.orders, req, res);
 });
 
 app.all('/api/pedidos', (req, res) => {
-  proxyRequest(SERVICES.orders, req, res);
+  void proxyRequest(SERVICES.orders, req, res);
 });
 
 app.all('/api/estadisticas/*', (req, res) => {
-  proxyRequest(SERVICES.orders, req, res);
+  void proxyRequest(SERVICES.orders, req, res);
 });
 
 app.all('/api/estadisticas', (req, res) => {
-  proxyRequest(SERVICES.orders, req, res);
+  void proxyRequest(SERVICES.orders, req, res);
 });
 
 // Ruta no encontrada
